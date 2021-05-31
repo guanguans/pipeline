@@ -87,8 +87,7 @@
         "style-fix": "./vendor/bin/php-cs-fixer fix --using-cache=no --config=.php_cs.dist --ansi",
         "psalm": "./vendor/bin/psalm",
         "test": "./vendor/bin/phpunit --coverage-text --colors=always --verbose",
-        "test-coverage": "./vendor/bin/phpunit --coverage-html=coverage/ --coverage-clover=clover.xml --color=always --verbose",
-        "benchmark": "./vendor/bin/phpbench run --retry-threshold=3 --iterations=15 --revs=1000 --warmup=2"
+        "test-coverage": "./vendor/bin/phpunit --coverage-html=coverage/ --coverage-clover=clover.xml --color=always --verbose"
     },
     "scripts-descriptions": {
         "cghooks": "Run git cghooks.",
@@ -99,7 +98,6 @@
         "style-fix": "Run style checks and fix violations.",
         "psalm": "Run psalm checks.",
         "test": "Run all tests.",
-        "test-coverage": "Run all tests with coverage.",
-        "benchmark": "Run all benchmark."
+        "test-coverage": "Run all tests with coverage."
     }
 }
