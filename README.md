@@ -23,11 +23,19 @@ $ composer require guanguans/pipeline --prefer-dist -vvv
 
 ## Usage
 
-1. replace `guanguans/pipeline` -> `vendorName/package-name`
-2. replace `Guanguans\\Pipeline` -> `VendorName\\PackageName`
-3. replace `Guanguans\Pipeline` -> `VendorName\PackageName`
-4. replace `ityaozm@gmail.com` -> `your email`
-5. execute `$ composer dumpautoload`
+``` php
+use Guanguans\Pipeline\Pipeline;
+
+(new Pipeline)
+	->send($object)
+    ->through($middleware)
+    // ->with('bar')
+    // ->via('differentMethod')
+    // ->thenReturn()
+    ->then(function(){
+    	// middleware is finished
+    });
+```
 
 ## Testing
 
