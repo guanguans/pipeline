@@ -182,7 +182,7 @@ class Pipeline
                     // of the dependency injection container. We can then build a callable and
                     // execute the pipe function giving in the parameters that are required.
                     try {
-                        $this->getContainer()->get($name);
+                        $pipe = $this->getContainer()->get($name);
                     } catch (RuntimeException $e) {
                         $pipe = new $name();
                     }
