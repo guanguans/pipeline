@@ -1,6 +1,6 @@
 {
     "name": "guanguans/pipeline",
-    "description": "A simple PHP middleware pipeline. - 一个简单的 PHP 中间件管道。",
+    "description": "An elegant PHP middleware pipeline. - 一个优雅的 PHP 中间件管道。",
     "keywords": [
         "middleware",
         "pipeline"

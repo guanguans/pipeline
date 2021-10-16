@@ -2,7 +2,7 @@
 
 [简体中文](README-CN.md) | [ENGLISH](README.md)
 
-> A simple PHP middleware pipeline. - 一个简单的 PHP 中间件管道。
+> An elegant PHP middleware pipeline. - 一个优雅的 PHP 中间件管道。
 
 [![Tests](https://github.com/guanguans/pipeline/workflows/Tests/badge.svg)](https://github.com/guanguans/pipeline/actions)
 [![Check & fix styling](https://github.com/guanguans/pipeline/workflows/Check%20&%20fix%20styling/badge.svg)](https://github.com/guanguans/pipeline/actions)
