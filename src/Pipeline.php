@@ -13,16 +13,17 @@ namespace Guanguans\Pipeline;
 use Closure;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use Throwable;
 
 /**
- * This file is modified from `https://github.com/mpociot/pipeline`.
+ * This file is modified from `https://github.com/illuminate/pipeline`.
  */
 class Pipeline
 {
     /**
      * The container implementation.
      *
-     * @var \Psr\Container\ContainerInterface
+     * @var \Psr\Container\ContainerInterface|null
      */
     protected $container;
 
@@ -39,13 +40,6 @@ class Pipeline
      * @var array
      */
     protected $pipes = [];
-
-    /**
-     * The additional parameters.
-     *
-     * @var array
-     */
-    protected $parameters = [];
 
     /**
      * The method to call on each pipe.
@@ -71,7 +65,7 @@ class Pipeline
      *
      * @return $this
      */
-    public function send(...$passable)
+    public function send($passable)
     {
         $this->passable = $passable;
 
@@ -107,20 +101,6 @@ class Pipeline
     }
 
     /**
-     * Set the additional parameters to send.
-     *
-     * @param mixed $parameters
-     *
-     * @return $this
-     */
-    public function with(...$parameters)
-    {
-        $this->parameters = $parameters;
-
-        return $this;
-    }
-
-    /**
      * Run the pipeline with a final destination callback.
      *
      * @return mixed
@@ -128,10 +108,10 @@ class Pipeline
     public function then(Closure $destination)
     {
         $pipeline = array_reduce(
-            array_reverse($this->pipes), $this->carry(), $this->prepareDestination($destination)
+            array_reverse($this->pipes()), $this->carry(), $this->prepareDestination($destination)
         );
 
-        return call_user_func_array($pipeline, $this->passable);
+        return $pipeline($this->passable);
     }
 
     /**
@@ -153,8 +133,12 @@ class Pipeline
      */
     protected function prepareDestination(Closure $destination)
     {
-        return function () use ($destination) {
-            return call_user_func_array($destination, func_get_args());
+        return function ($passable) use ($destination) {
+            try {
+                return $destination($passable);
+            } catch (Throwable $e) {
+                return $this->handleException($passable, $e);
+            }
         };
     }
 
@@ -166,38 +150,37 @@ class Pipeline
     protected function carry()
     {
         return function ($stack, $pipe) {
-            return function () use ($stack, $pipe) {
-                $passable = func_get_args();
-                $passable[] = $stack;
-                $passable = array_merge($passable, $this->parameters);
+            return function ($passable) use ($stack, $pipe) {
+                try {
+                    if (is_callable($pipe)) {
+                        // If the pipe is a callable, then we will call it directly, but otherwise we
+                        // will resolve the pipes out of the dependency container and call it with
+                        // the appropriate method and arguments, returning the results back out.
+                        return $pipe($passable, $stack);
+                    } elseif (! is_object($pipe)) {
+                        [$name, $parameters] = $this->parsePipeString($pipe);
 
-                if (is_callable($pipe)) {
-                    // If the pipe is an instance of a Closure, we will just call it directly but
-                    // otherwise we'll resolve the pipes out of the container and call it with
-                    // the appropriate method and arguments, returning the results back out.
-                    return call_user_func_array($pipe, $passable);
-                } elseif (! is_object($pipe)) {
-                    [$name, $parameters] = $this->parsePipeString($pipe);
-                    // If the pipe is a string we will parse the string and resolve the class out
-                    // of the dependency injection container. We can then build a callable and
-                    // execute the pipe function giving in the parameters that are required.
-                    try {
+                        // If the pipe is a string we will parse the string and resolve the class out
+                        // of the dependency injection container. We can then build a callable and
+                        // execute the pipe function giving in the parameters that are required.
                         $pipe = $this->getContainer()->get($name);
-                    } catch (RuntimeException $e) {
-                        $pipe = new $name();
+
+                        $parameters = array_merge([$passable, $stack], $parameters);
+                    } else {
+                        // If the pipe is already an object we'll just make a callable and pass it to
+                        // the pipe as-is. There is no need to do any extra parsing and formatting
+                        // since the object we're given was already a fully instantiated object.
+                        $parameters = [$passable, $stack];
                     }
 
-                    $parameters = array_merge($passable, $parameters);
-                } else {
-                    // If the pipe is already an object we'll just make a callable and pass it to
-                    // the pipe as-is. There is no need to do any extra parsing and formatting
-                    // since the object we're given was already a fully instantiated object.
-                    $parameters = $passable;
-                }
+                    $carry = method_exists($pipe, $this->method)
+                        ? $pipe->{$this->method}(...$parameters)
+                        : $pipe(...$parameters);
 
-                return method_exists($pipe, $this->method)
-                    ? call_user_func_array([$pipe, $this->method], $parameters)
-                    : $pipe(...$parameters);
+                    return $this->handleCarry($carry);
+                } catch (Throwable $e) {
+                    return $this->handleException($passable, $e);
+                }
             };
         };
     }
@@ -221,9 +204,19 @@ class Pipeline
     }
 
     /**
+     * Get the array of configured pipes.
+     *
+     * @return array
+     */
+    protected function pipes()
+    {
+        return $this->pipes;
+    }
+
+    /**
      * Get the container instance.
      *
-     * @return \Psr\Container\ContainerInterface
+     * @return \Psr\Container\ContainerInterface|null
      *
      * @throws \RuntimeException
      */
@@ -246,5 +239,31 @@ class Pipeline
         $this->container = $container;
 
         return $this;
+    }
+
+    /**
+     * Handle the value returned from each pipe before passing it to the next.
+     *
+     * @param mixed $carry
+     *
+     * @return mixed
+     */
+    protected function handleCarry($carry)
+    {
+        return $carry;
+    }
+
+    /**
+     * Handle the given exception.
+     *
+     * @param mixed $passable
+     *
+     * @return mixed
+     *
+     * @throws \Throwable
+     */
+    protected function handleException($passable, Throwable $e)
+    {
+        throw $e;
     }
 }

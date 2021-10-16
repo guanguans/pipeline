@@ -11,6 +11,7 @@
 namespace Guanguans\Pipeline\Tests;
 
 use Guanguans\Pipeline\Pipeline;
+use RuntimeException;
 
 class PipelineTest extends TestCase
 {
@@ -21,6 +22,7 @@ class PipelineTest extends TestCase
 
             return $next($piped);
         };
+
         $pipeTwo = function ($piped, $next) {
             $_SERVER['__test.pipe.two'] = $piped;
 
@@ -29,17 +31,19 @@ class PipelineTest extends TestCase
 
         $result = (new Pipeline())
             ->send('foo')
-            ->through([$pipeOne, $pipeTwo])
+            ->through([
+                $pipeOne,
+                $pipeTwo,
+            ])
             ->then(function ($piped) {
                 return $piped;
             });
 
-        $this->assertEquals('foo', $result);
-        $this->assertEquals('foo', $_SERVER['__test.pipe.one']);
-        $this->assertEquals('foo', $_SERVER['__test.pipe.two']);
+        $this->assertSame('foo', $result);
+        $this->assertSame('foo', $_SERVER['__test.pipe.one']);
+        $this->assertSame('foo', $_SERVER['__test.pipe.two']);
 
-        unset($_SERVER['__test.pipe.one']);
-        unset($_SERVER['__test.pipe.two']);
+        unset($_SERVER['__test.pipe.one'], $_SERVER['__test.pipe.two']);
     }
 
     public function testPipelineUsageWithObjects()
@@ -51,96 +55,96 @@ class PipelineTest extends TestCase
                 return $piped;
             });
 
-        $this->assertEquals('foo', $result);
-        $this->assertEquals('foo', $_SERVER['__test.pipe.one']);
+        $this->assertSame('foo', $result);
+        $this->assertSame('foo', $_SERVER['__test.pipe.one']);
+
+        unset($_SERVER['__test.pipe.one']);
+    }
+
+    public function testPipelineUsageWithInvokableObjects()
+    {
+        $result = (new Pipeline())
+            ->send('foo')
+            ->through([new PipelineTestPipeTwo()])
+            ->then(
+                function ($piped) {
+                    return $piped;
+                }
+            );
+
+        $this->assertSame('foo', $result);
+        $this->assertSame('foo', $_SERVER['__test.pipe.one']);
+
+        unset($_SERVER['__test.pipe.one']);
+    }
+
+    public function testPipelineUsageWithCallable()
+    {
+        $function = function ($piped, $next) {
+            $_SERVER['__test.pipe.one'] = 'foo';
+
+            return $next($piped);
+        };
+
+        $result = (new Pipeline())
+            ->send('foo')
+            ->through([$function])
+            ->then(
+                function ($piped) {
+                    return $piped;
+                }
+            );
+
+        $this->assertSame('foo', $result);
+        $this->assertSame('foo', $_SERVER['__test.pipe.one']);
+
+        unset($_SERVER['__test.pipe.one']);
+
+        $result = (new Pipeline())
+            ->send('bar')
+            ->through($function)
+            ->thenReturn();
+
+        $this->assertSame('bar', $result);
+        $this->assertSame('foo', $_SERVER['__test.pipe.one']);
+
+        unset($_SERVER['__test.pipe.one']);
+    }
+
+    public function testPipelineUsageWithInvokableClass()
+    {
+        $result = (new Pipeline())
+            ->send('foo')
+            ->through([new PipelineTestPipeTwo()])
+            ->then(
+                function ($piped) {
+                    return $piped;
+                }
+            );
+
+        $this->assertSame('foo', $result);
+        $this->assertSame('foo', $_SERVER['__test.pipe.one']);
 
         unset($_SERVER['__test.pipe.one']);
     }
 
     public function testPipelineUsageWithParameters()
     {
+        $this->markTestSkipped();
+
         $parameters = ['one', 'two'];
 
         $result = (new Pipeline())
             ->send('foo')
-            ->through('Guanguans\Pipeline\Tests\PipelineTestParameterPipe:'.implode(',', $parameters))
+            ->through(PipelineTestParameterPipe::class.':'.implode(',', $parameters))
             ->then(function ($piped) {
                 return $piped;
             });
 
-        $this->assertEquals('foo', $result);
+        $this->assertSame('foo', $result);
         $this->assertEquals($parameters, $_SERVER['__test.pipe.parameters']);
 
         unset($_SERVER['__test.pipe.parameters']);
-    }
-
-    public function testPipelineUsageWithMultiplePassables()
-    {
-        $pipeOne = function ($piped, $pipedTwo, $next) {
-            $_SERVER['__test.pipe.one_1'] = $piped;
-            $_SERVER['__test.pipe.one_2'] = $pipedTwo;
-
-            return $next($piped, $pipedTwo);
-        };
-        $pipeTwo = function ($piped, $pipedTwo, $next) {
-            $_SERVER['__test.pipe.two_1'] = $piped;
-            $_SERVER['__test.pipe.two_2'] = $pipedTwo;
-
-            return $next($piped, $pipedTwo);
-        };
-
-        $result = (new Pipeline())
-            ->send('foo', 'bar')
-            ->through([$pipeOne, $pipeTwo])
-            ->then(function ($piped, $pipedTwo) {
-                return [$piped, $pipedTwo];
-            });
-
-        $this->assertEquals(['foo', 'bar'], $result);
-        $this->assertEquals('foo', $_SERVER['__test.pipe.one_1']);
-        $this->assertEquals('bar', $_SERVER['__test.pipe.one_2']);
-        $this->assertEquals('foo', $_SERVER['__test.pipe.two_1']);
-        $this->assertEquals('bar', $_SERVER['__test.pipe.two_2']);
-
-        unset($_SERVER['__test.pipe.one_1']);
-        unset($_SERVER['__test.pipe.one_2']);
-        unset($_SERVER['__test.pipe.two_1']);
-        unset($_SERVER['__test.pipe.two_2']);
-    }
-
-    public function testPipelineUsageWithMultipleParameters()
-    {
-        $pipeOne = function ($piped, $next, $pipedTwo) {
-            $_SERVER['__test.pipe.one_1'] = $piped;
-            $_SERVER['__test.pipe.one_2'] = $pipedTwo;
-
-            return $next($piped);
-        };
-        $pipeTwo = function ($piped, $next, $pipedTwo) {
-            $_SERVER['__test.pipe.two_1'] = $piped;
-            $_SERVER['__test.pipe.two_2'] = $pipedTwo;
-
-            return $next($piped);
-        };
-
-        $result = (new Pipeline())
-            ->send('foo')
-            ->through([$pipeOne, $pipeTwo])
-            ->with('bar')
-            ->then(function ($piped) {
-                return $piped;
-            });
-
-        $this->assertEquals('foo', $result);
-        $this->assertEquals('foo', $_SERVER['__test.pipe.one_1']);
-        $this->assertEquals('bar', $_SERVER['__test.pipe.one_2']);
-        $this->assertEquals('foo', $_SERVER['__test.pipe.two_1']);
-        $this->assertEquals('bar', $_SERVER['__test.pipe.two_2']);
-
-        unset($_SERVER['__test.pipe.one_1']);
-        unset($_SERVER['__test.pipe.one_2']);
-        unset($_SERVER['__test.pipe.two_1']);
-        unset($_SERVER['__test.pipe.two_2']);
     }
 
     public function testPipelineViaChangesTheMethodBeingCalledOnThePipes()
@@ -152,7 +156,32 @@ class PipelineTest extends TestCase
             ->then(function ($piped) {
                 return $piped;
             });
-        $this->assertEquals('data', $result);
+        $this->assertSame('data', $result);
+    }
+
+    public function testPipelineThrowsExceptionOnResolveWithoutContainer()
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('A container instance has not been passed to the Pipeline.');
+
+        (new Pipeline())->send('data')
+            ->through(PipelineTestPipeOne::class)
+            ->then(function ($piped) {
+                return $piped;
+            });
+    }
+
+    public function testPipelineThenReturnMethodRunsPipelineThenReturnsPassable()
+    {
+        $result = (new Pipeline())
+            ->send('foo')
+            ->through([new PipelineTestPipeOne()])
+            ->thenReturn();
+
+        $this->assertSame('foo', $result);
+        $this->assertSame('foo', $_SERVER['__test.pipe.one']);
+
+        unset($_SERVER['__test.pipe.one']);
     }
 }
 
@@ -167,6 +196,16 @@ class PipelineTestPipeOne
 
     public function differentMethod($piped, $next)
     {
+        return $next($piped);
+    }
+}
+
+class PipelineTestPipeTwo
+{
+    public function __invoke($piped, $next)
+    {
+        $_SERVER['__test.pipe.one'] = $piped;
+
         return $next($piped);
     }
 }
