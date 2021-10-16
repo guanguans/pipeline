@@ -2,6 +2,10 @@
 
 All notable changes to `guanguans/pipeline` will be documented in this file.
 
+## 1.0.2 - 2021-10-16
+
+* Update `Hub` from `illuminate/pipeline`.
+
 ## 1.0.1 - 2021-10-16
 
 * Update from `illuminate/pipeline`.
