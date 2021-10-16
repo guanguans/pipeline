@@ -23,17 +23,52 @@ $ composer require guanguans/pipeline --prefer-dist -vvv
 
 ## 使用
 
+### 代码
+
 ```php
+<?php
+require __DIR__.'/vendor/autoload.php';
+
 use Guanguans\Pipeline\Pipeline;
 
-(new Pipeline)
-	->send($object)
-    ->through($middleware)
+(new Pipeline())
+    ->send('passable')
+    ->through(
+        function ($passable, Closure $next){
+            echo '1. Before apply first middleware.'.PHP_EOL;
+            $next($passable);
+            echo '7. After apply first middleware.'.PHP_EOL;
+        },
+        function ($passable, Closure $next){
+            echo '2. Before apply second middleware.'.PHP_EOL;
+            $next($passable);
+            echo '6. After apply second middleware.'.PHP_EOL;
+        },
+        function ($passable, Closure $next){
+            echo '3. Before apply third middleware.'.PHP_EOL;
+            $next($passable);
+            echo '5. After apply third middleware.'.PHP_EOL;
+        }
+    )
     // ->via('differentMethod')
     // ->thenReturn()
-    ->then(function(){
-    	// middleware is finished
+    ->then(function ($passable){
+        echo '4. Middleware is finished.'.PHP_EOL;
+
+        return $passable;
     });
+```
+
+### 输出
+
+```md
+1. Before apply first middleware.
+2. Before apply second middleware.
+3. Before apply third middleware.
+4. Middleware is finished.
+5. After apply third middleware.
+6. After apply second middleware.
+7. After apply first middleware.
 ```
 
 ## 测试
