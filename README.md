@@ -17,19 +17,18 @@
 
 ## Installation
 
-``` bash
+```bash
 $ composer require guanguans/pipeline --prefer-dist -vvv
 ```
 
 ## Usage
 
-``` php
+```php
 use Guanguans\Pipeline\Pipeline;
 
 (new Pipeline)
 	->send($object)
     ->through($middleware)
-    // ->with('bar')
     // ->via('differentMethod')
     // ->thenReturn()
     ->then(function(){
@@ -39,7 +38,7 @@ use Guanguans\Pipeline\Pipeline;
 
 ## Testing
 
-``` bash
+```bash
 $ composer test
 ```
 
