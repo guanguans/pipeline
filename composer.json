@@ -30,7 +30,7 @@
         "brainmaestro/composer-git-hooks": "^2.7",
         "friendsofphp/php-cs-fixer": "^2.16",
         "mockery/mockery": "^1.2",
-        "overtrue/phplint": "^2.3",
+        "overtrue/phplint": "^2.3 || ^3.0",
         "phpbench/phpbench": "^1.0",
         "phpunit/phpunit": "^8.0||^9.0",
         "vimeo/psalm": "^4.0"
