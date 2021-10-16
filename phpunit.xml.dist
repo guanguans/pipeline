@@ -20,7 +20,7 @@
         <whitelist>
             <directory suffix=".php">src/</directory>
             <exclude>
-                <file>src/Skeleton.php</file>
+                <file>src/Hub.php</file>
             </exclude>
         </whitelist>
     </filter>
