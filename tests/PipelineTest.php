@@ -11,7 +11,6 @@
 namespace Guanguans\Pipeline\Tests;
 
 use Guanguans\Pipeline\Pipeline;
-use RuntimeException;
 
 class PipelineTest extends TestCase
 {
@@ -161,7 +160,7 @@ class PipelineTest extends TestCase
 
     public function testPipelineThrowsExceptionOnResolveWithoutContainer()
     {
-        $this->expectException(RuntimeException::class);
+        $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('A container instance has not been passed to the Pipeline.');
 
         (new Pipeline())->send('data')

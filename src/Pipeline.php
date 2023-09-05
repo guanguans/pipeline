@@ -12,8 +12,6 @@ namespace Guanguans\Pipeline;
 
 use Closure;
 use Psr\Container\ContainerInterface;
-use RuntimeException;
-use Throwable;
 
 /**
  * This file is modified from `https://github.com/illuminate/pipeline`.
@@ -29,8 +27,6 @@ class Pipeline
 
     /**
      * The object being passed through the pipeline.
-     *
-     * @var mixed
      */
     protected $passable;
 
@@ -60,8 +56,6 @@ class Pipeline
 
     /**
      * Set the object being sent through the pipeline.
-     *
-     * @param mixed $passable
      *
      * @return $this
      */
@@ -102,10 +96,8 @@ class Pipeline
 
     /**
      * Run the pipeline with a final destination callback.
-     *
-     * @return mixed
      */
-    public function then(Closure $destination)
+    public function then(\Closure $destination)
     {
         $pipeline = array_reduce(
             array_reverse($this->pipes()), $this->carry(), $this->prepareDestination($destination)
@@ -116,8 +108,6 @@ class Pipeline
 
     /**
      * Run the pipeline and return the result.
-     *
-     * @return mixed
      */
     public function thenReturn()
     {
@@ -131,12 +121,12 @@ class Pipeline
      *
      * @return \Closure
      */
-    protected function prepareDestination(Closure $destination)
+    protected function prepareDestination(\Closure $destination)
     {
         return function ($passable) use ($destination) {
             try {
                 return $destination($passable);
-            } catch (Throwable $e) {
+            } catch (\Throwable $e) {
                 return $this->handleException($passable, $e);
             }
         };
@@ -178,7 +168,7 @@ class Pipeline
                         : $pipe(...$parameters);
 
                     return $this->handleCarry($carry);
-                } catch (Throwable $e) {
+                } catch (\Throwable $e) {
                     return $this->handleException($passable, $e);
                 }
             };
@@ -223,7 +213,7 @@ class Pipeline
     protected function getContainer()
     {
         if (! $this->container) {
-            throw new RuntimeException('A container instance has not been passed to the Pipeline.');
+            throw new \RuntimeException('A container instance has not been passed to the Pipeline.');
         }
 
         return $this->container;
@@ -243,10 +233,6 @@ class Pipeline
 
     /**
      * Handle the value returned from each pipe before passing it to the next.
-     *
-     * @param mixed $carry
-     *
-     * @return mixed
      */
     protected function handleCarry($carry)
     {
@@ -256,13 +242,9 @@ class Pipeline
     /**
      * Handle the given exception.
      *
-     * @param mixed $passable
-     *
-     * @return mixed
-     *
      * @throws \Throwable
      */
-    protected function handleException($passable, Throwable $e)
+    protected function handleException($passable, \Throwable $e)
     {
         throw $e;
     }

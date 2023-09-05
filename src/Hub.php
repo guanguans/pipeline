@@ -10,7 +10,6 @@
 
 namespace Guanguans\Pipeline;
 
-use Closure;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -47,7 +46,7 @@ class Hub
      *
      * @return void
      */
-    public function defaults(Closure $callback)
+    public function defaults(\Closure $callback)
     {
         return $this->pipeline('default', $callback);
     }
@@ -59,7 +58,7 @@ class Hub
      *
      * @return void
      */
-    public function pipeline($name, Closure $callback)
+    public function pipeline($name, \Closure $callback)
     {
         $this->pipelines[$name] = $callback;
     }
@@ -67,10 +66,7 @@ class Hub
     /**
      * Send an object through one of the available pipelines.
      *
-     * @param mixed       $object
      * @param string|null $pipeline
-     *
-     * @return mixed
      */
     public function pipe($object, $pipeline = null)
     {
