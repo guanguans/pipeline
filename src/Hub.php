@@ -80,7 +80,7 @@ class Hub
     /**
      * Get the container instance used by the hub.
      *
-     * @return \Psr\Container\ContainerInterface
+     * @return ContainerInterface
      */
     public function getContainer()
     {
