@@ -21,7 +21,7 @@ class Pipeline
     /**
      * The container implementation.
      *
-     * @var \Psr\Container\ContainerInterface|null
+     * @var ContainerInterface|null
      */
     protected $container;
 
@@ -49,7 +49,7 @@ class Pipeline
      *
      * @return void
      */
-    public function __construct(ContainerInterface $container = null)
+    public function __construct(?ContainerInterface $container = null)
     {
         $this->container = $container;
     }
@@ -206,7 +206,7 @@ class Pipeline
     /**
      * Get the container instance.
      *
-     * @return \Psr\Container\ContainerInterface|null
+     * @return ContainerInterface|null
      *
      * @throws \RuntimeException
      */

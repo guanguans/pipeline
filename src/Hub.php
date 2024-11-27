@@ -20,7 +20,7 @@ class Hub
     /**
      * The container implementation.
      *
-     * @var \Psr\Container\ContainerInterface|null
+     * @var ContainerInterface|null
      */
     protected $container;
 
@@ -36,7 +36,7 @@ class Hub
      *
      * @return void
      */
-    public function __construct(ContainerInterface $container = null)
+    public function __construct(?ContainerInterface $container = null)
     {
         $this->container = $container;
     }
